@@ -1,5 +1,6 @@
 #lang racket
 (require
+  "auxiliary/lists.rkt"
   "coordinates.rkt"
   "interface/screens/map.rkt"
   "interface/screens/resources.rkt"
@@ -18,6 +19,34 @@
     (super-new)
     (inherit-field canvas x-offset y-offset)
     
+    (define screen-state
+      (new (class object%
+             (super-new)
+             
+             (define focus (list 'map 'resources))
+             (define selected-tile (point 0 0))
+             (define selected-resource 'none)
+             
+             (define/public (get-focus)
+               (car focus))
+             (define/public (set-focus screen)
+               (let ((new-focus-list (rotate-to-element screen)))
+                 (set! focus new-focus-list)))
+             
+             (define/public (get-selected-resource)
+               selected-resource)
+             (define/public (set-selected-resource res)
+               (set! selected-resource res))
+             
+             (define/public (get-selected-tile)
+               selected-tile)
+             (define/public (set-selected-tile tile)
+               (set! selected-tile tile))
+             
+             (define/public (rotate-focus)
+               (set! focus (rotate-left focus))
+               (car focus)))))
+    
     (define resource-screen (new resource-screen% [canvas canvas]))
     (define status-screen (new status-screen% 
                                [canvas canvas]
@@ -29,8 +58,6 @@
                             [height 30]))
     (define selected-resource 'nothing)
     (define storage (init-storage)) ;FIXME default storage
-    (define focus 'map)
-    (define selected-tile (point 0 0))
     
     (define/override (draw canvas)
       (send canvas clear)
@@ -44,25 +71,29 @@
       (send map-screen draw-screen))
     
     (define/override (update key-event)
-;      (case focus
-;        ((resources)
-;         (set! selected-resource
-;               (case (send key-event get-key-code)
-;                 [(numpad8 #\w up)    (send status-screen set-resource-mode
-;                                            (send resource-screen move-cursor 'up))]
-;                 [(numpad2 #\s down)  (send status-screen set-resource-mode
-;                                            (send resource-screen move-cursor 'down))]
-;                 [(numpad4 #\a left)  (send status-screen move-cursor 'left)]
-;                 [(numpad6 #\d right) (send status-screen move-cursor 'right)])))
-;        (else 
-         (set! selected-tile
-                (case (send key-event get-key-code)
-                  [(numpad8 #\w up)    (send map-screen move-cursor 'up)]
-                  [(numpad2 #\s down)  (send map-screen move-cursor 'down)]
-                  [(numpad4 #\a left)  (send map-screen move-cursor 'left)]
-                  [(numpad6 #\d right) (send map-screen move-cursor 'right)]))
-    
-    this)))
+      (let ((key-code (send key-event get-key-code)))
+        (case key-code
+          [(#\tab) (send screen-state rotate-focus)]
+          [else
+           (case (send screen-state get-focus)
+             ((resources)
+              (send screen-state set-selected-resource
+                    (case key-code
+                      [(numpad8 #\w up)    (send status-screen set-resource-mode
+                                                 (send resource-screen move-cursor 'up))]
+                      [(numpad2 #\s down)  (send status-screen set-resource-mode
+                                                 (send resource-screen move-cursor 'down))]
+                      [(numpad4 #\a left)  (send status-screen move-cursor 'left)]
+                      [(numpad6 #\d right) (send status-screen move-cursor 'right)])))
+             (else 
+              (send screen-state set-selected-tile
+                    (case key-code
+                      [(numpad8 #\w up)    (send map-screen move-cursor 'up)]
+                      [(numpad2 #\s down #\tab)  (send map-screen move-cursor 'down)]
+                      [(numpad4 #\a left)  (send map-screen move-cursor 'left)]
+                      [(numpad6 #\d right) (send map-screen move-cursor 'right)]))))]))
+      
+      this)))
 
 (define (is-a-border? x y)
   (or
