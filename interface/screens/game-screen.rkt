@@ -1,12 +1,12 @@
 #lang racket
 (require
-  "auxiliary/lists.rkt"
-  "coordinates.rkt"
-  "interface/screens/map.rkt"
-  "interface/screens/resources.rkt"
-  "interface/screens/status.rkt"
-  "world/resources.rkt"
-  "screen.rkt")
+  "../../auxiliary/lists.rkt"
+  "../../auxiliary/coordinates.rkt"
+  "../../world/resources.rkt"
+  "../screen.rkt"
+  "map.rkt"
+  "resources.rkt"
+  "status.rkt")
 
 (provide
  game-screen%)
@@ -23,15 +23,40 @@
       (new (class object%
              (super-new)
              
-             (define focus (list 'map 'resources))
+             (define focus '())
              (define selected-tile (point 0 0))
              (define selected-resource 'none)
              
              (define/public (get-focus)
-               (car focus))
+               (caar focus))
+             
+             (define (send-focus-unfocus-messages focus-list)
+               (define (maybe-focus screen-group)
+                 (define (maybe-focus screen)
+                   (unless (eq? screen 'nothing)
+                     (send screen focus)))
+                 (map maybe-focus (cdr screen-group)))
+               
+               (define (maybe-unfocus screen-group)
+                 (define (maybe-unfocus screen)
+                   (unless (eq? screen 'nothing)
+                     (send screen unfocus)))
+                 (map maybe-unfocus (cdr screen-group)))
+               
+               (maybe-focus (car focus-list))
+               (map (lambda (s) (maybe-unfocus s))
+                    (cdr focus-list)))
+             
+             
              (define/public (set-focus screen)
-               (let ((new-focus-list (rotate-to-element screen)))
-                 (set! focus new-focus-list)))
+               (let ((new-focus-list (rotate-to-predicate (lambda (x) (= (car x) screen))
+                                                          focus)))
+                 (set! focus new-focus-list)
+                 (send-focus-unfocus-messages focus)))
+             
+             (define/public (init-focus screens)
+               (set! focus screens)
+               (send-focus-unfocus-messages focus))
              
              (define/public (get-selected-resource)
                selected-resource)
@@ -45,17 +70,20 @@
              
              (define/public (rotate-focus)
                (set! focus (rotate-left focus))
+               (send-focus-unfocus-messages focus)
                (car focus)))))
     
     (define resource-screen (new resource-screen% [canvas canvas]))
-    (define status-screen (new status-screen% 
-                               [canvas canvas]
-                               [y-offset (- 36 status-screen-height)]))
     (define map-screen (new map-screen%
                             [canvas canvas]
                             [x-offset (+ resource-screen-width 1)]
                             [width 51]
                             [height 30]))
+    (define status-screen (new status-screen% 
+                               [canvas canvas]
+                               [y-offset (- 36 status-screen-height)]))
+    (send screen-state init-focus (list (list 'map map-screen) 
+                                        (list 'resource resource-screen status-screen)))
     (define selected-resource 'nothing)
     (define storage (init-storage)) ;FIXME default storage
     
@@ -66,9 +94,9 @@
              [yi (in-range (send canvas get-height-in-characters))])
         (when (is-a-border? xi yi) (send canvas write #\# xi yi)))
       
-      (send resource-screen draw-screen storage)
-      (send status-screen draw-screen)
-      (send map-screen draw-screen))
+      (send resource-screen draw storage)
+      (send status-screen draw)
+      (send map-screen draw))
     
     (define/override (update key-event)
       (let ((key-code (send key-event get-key-code)))
@@ -76,7 +104,7 @@
           [(#\tab) (send screen-state rotate-focus)]
           [else
            (case (send screen-state get-focus)
-             ((resources)
+             ((resource)
               (send screen-state set-selected-resource
                     (case key-code
                       [(numpad8 #\w up)    (send status-screen set-resource-mode

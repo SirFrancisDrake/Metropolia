@@ -2,7 +2,8 @@
 (provide
  point point-x point-y
  modify-x modify-y
- set-x set-y)
+ set-x set-y
+ distance)
 
 (define point make-rectangular)
 (define point-x real-part)
@@ -19,3 +20,9 @@
   (modify-x (const x) pt))
 (define (set-y y pt)
   (modify-y (const y) pt))
+
+(define (distance a b)
+  (define (norm a)
+    (sqrt (+ (expt (point-x a) 2)
+             (expt (point-y a) 2))))
+  (norm (- b a)))

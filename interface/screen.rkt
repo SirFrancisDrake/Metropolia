@@ -11,7 +11,15 @@
     (init-field canvas
                 [x-offset 0]
                 [y-offset 0])
-
+    (field [focused #t])
+    
+    (define/public (focus)
+      (set! focused #t))
+    (define/public (unfocus)
+      (set! focused #f))
+    (define/public (focused?)
+      focused)
+    
     ; Called when the user pressed a key
     ; Should return the screen to use for the next tick (often 'this')
     (define/public (update key-event)

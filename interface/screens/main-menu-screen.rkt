@@ -1,7 +1,7 @@
 #lang racket
 (require
-  "game-screen.rkt"
-  "screen.rkt")
+  "../screen.rkt"
+  "game-screen.rkt")
 
 (provide
  main-menu-screen%)
@@ -20,5 +20,5 @@
   ; Just draw a basic menu
   (define/override (draw canvas)
     (send canvas clear)
-    (send canvas write-center "Offworld Trading Clone" 10)
+    (send canvas write-center "Metropolia: an Offworld Trading Clone" 10)
     (send canvas write-center "Press any key to start" 12))))

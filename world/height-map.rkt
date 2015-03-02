@@ -1,6 +1,6 @@
 #lang racket
 (require
-  "../coordinates.rkt")
+  "../auxiliary/coordinates.rkt")
 
 (provide
  make-height-map)
@@ -11,5 +11,11 @@
   (define mp (make-hash))
   (for* ([x (range size-x)]
          [y (range size-y)])
-    (hash-set! mp (point x y) (random (+ max-height 1))))
+    (hash-set! mp 
+               (point x y) 
+               (point-generator)))
   mp)
+
+(define (point-generator)
+  ;(random (+ max-height 1))
+  0)

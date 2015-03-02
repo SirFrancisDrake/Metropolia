@@ -1,9 +1,9 @@
 #lang racket
 (require
+  "../../auxiliary/coordinates.rkt"
   "../../auxiliary/numbers.rkt"
-  "../../coordinates.rkt"
-  "../../screen.rkt"
-  "../../world/height-map.rkt")
+  "../../world/height-map.rkt"
+  "../screen.rkt")
 
 (provide
  map-screen%)
@@ -18,7 +18,8 @@
   (class screen%
     (init-field width height)
     (super-new)
-    (inherit-field canvas x-offset y-offset)
+    (inherit-field canvas x-offset y-offset focused)
+    (inherit focus unfocus focused?)
     
     (define screen-state
       (new (class object%
@@ -48,10 +49,16 @@
     
     (define/public (move-cursor direction)
       (define a (send screen-state move-cursor direction))
-      (send this draw-screen)
+      (send this draw)
       a)
     
-    (define/public (draw-screen)
+    (define (cursor-background)
+      (let ((have-focus (send this focused?)))
+        (if have-focus
+            "green"
+            "red")))
+    
+    (define/override (draw)
       (for* ([xi (in-range width)]
              [yi (in-range height)])
         (let ([x (+ x-offset xi)]
@@ -62,7 +69,7 @@
                     x
                     y
                     "blue"
-                    "white")
+                    (cursor-background))
               (send canvas write 
                     (recog (hash-ref height-map (point xi yi)))
                     x

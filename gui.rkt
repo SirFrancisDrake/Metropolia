@@ -4,8 +4,8 @@
   racket/draw
   
   "ascii-canvas.rkt"
-  "main-menu-screen.rkt"
-  "screen.rkt")
+  "interface/screens/main-menu-screen.rkt"
+  "interface/screen.rkt")
 
 ; create the GUI
 (define gui%
@@ -16,7 +16,7 @@
     ;create the frame
     (define frame
       (new frame%
-           [label "Offworld Trading"]
+           [label "Metropolia"]
            [style '(no-resize-border)]))
     
     (define canvas

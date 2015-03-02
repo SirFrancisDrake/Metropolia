@@ -2,7 +2,5 @@
 (provide
  dec inc)
 
-(define (dec a)
-  (- a 1))
-(define (inc a)
-  (+ a 1))
+(define dec sub1)
+(define inc add1)

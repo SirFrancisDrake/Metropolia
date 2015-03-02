@@ -1,7 +1,7 @@
 #lang racket
 (require
   "../../world/resources.rkt"
-  "../../screen.rkt"
+  "../screen.rkt"
   "../resources.rkt")
 
 (provide
@@ -10,6 +10,7 @@
 (define resource-screen%
   (class screen%
     (inherit-field canvas)
+    (inherit focus unfocus focused?)
     
     (define left-offset 1)
     (define top-offset 1)
@@ -28,8 +29,7 @@
            (set! cursor-position (+ cursor-position 1)))])
       (list-ref all-resources cursor-position))
     
-    (define/public (draw-screen storage)
-      
+    (define/override (draw storage)
       (define cnv
         (for/list ([counter (in-naturals top-offset)]
                    [pair (name-value storage)])
@@ -46,6 +46,10 @@
       (send this draw-cursor canvas cursor-position))
     
     (define/public (draw-cursor canvas position)
-      (send canvas write #\> (- left-offset 1) (+ top-offset position)))
+      (define cursor-color
+        (if (send this focused?)
+            "white"
+            "dimgray"))
+      (send canvas write #\> (- left-offset 1) (+ top-offset position) cursor-color))
     
     (super-new)))

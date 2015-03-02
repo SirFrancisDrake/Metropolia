@@ -1,6 +1,6 @@
 #lang racket
 (require
-  "../../screen.rkt")
+  "../screen.rkt")
 
 (provide
  status-screen%)
@@ -41,13 +41,13 @@
 
     (define/public (set-resource-mode resource)
       (send screen-state resource-mode resource)
-      (send this draw-screen))
+      (send this draw))
     
     (define/public (move-cursor direction)
       (send screen-state move-cursor direction)
       (send this draw-cursor))
     
-    (define/public (draw-screen)
+    (define/override (draw)
       (let ([buttons (send screen-state get-buttons)])
         (for/list ([c (in-naturals 0)]
                    [b buttons])
@@ -59,5 +59,8 @@
           
     (define/public (draw-cursor)
       (let ([x (+ x-offset 1 (* 10 (send screen-state get-cursor-position)))]
-            [y (+ y-offset 4)])
-        (send canvas write #\> x y)))))
+            [y (+ y-offset 4)]
+            [cursor-color (if (send this focused?)
+                              "white"
+                              "dimgray")])
+        (send canvas write #\> x y cursor-color)))))
